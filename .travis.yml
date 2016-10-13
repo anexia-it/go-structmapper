@@ -14,14 +14,8 @@ branches:
 before_install:
   - go get golang.org/x/tools/cmd/cover
 
-install:
-  - mkdir -p $HOME/gopath/src/gopkg.in/anexia-it
-  - mv $HOME/gopath/src/github.com/anexia-it/go-structmapper $HOME/gopath/src/gopkg.in/anexia-it/go-structmapper.v1
-  - cd $HOME/gopath/src/gopkg.in/anexia-it/go-structmapper.v1
-
 script:
-  - go tool vet .
-  - go test -v -coverprofile=coverage.txt -covermode=atomic
+  - GO15VENDOREXPERIMENT=1 go test -v -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
