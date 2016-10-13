@@ -8,16 +8,16 @@ import (
 	"github.com/anexia-it/go-structmapper"
 )
 
-type ExampleStruct struct {
-	A       string
-	B       int `mapper:"bee"`
-	C       []string
-	D       map[string]int
-	E       net.IP
-	Ignored string `mapper:"-"`
-}
-
 func ExampleMapper_ToMap() {
+	type ExampleStruct struct {
+		A       string
+		B       int `mapper:"bee"`
+		C       []string
+		D       map[string]int
+		E       net.IP
+		Ignored string `mapper:"-"`
+	}
+
 	// Create new structmapper instance with default configuration
 	sm, err := structmapper.NewMapper()
 	if err != nil {
@@ -55,6 +55,15 @@ func ExampleMapper_ToMap() {
 }
 
 func ExampleMapper_ToStruct() {
+	type ExampleStruct struct {
+		A       string
+		B       int `mapper:"bee"`
+		C       []string
+		D       map[string]int
+		E       net.IP
+		Ignored string `mapper:"-"`
+	}
+
 	// Create new structmapper instance with default configuration
 	sm, err := structmapper.NewMapper()
 	if err != nil {
@@ -83,7 +92,16 @@ func ExampleMapper_ToStruct() {
 	// Output: A=a,B=5,C=c0,c1,D=d0=1,d1=2,E=127.0.0.1,Ignored=
 }
 
-func ExampleRoundtrip() {
+func ExampleMapper_roundtrip() {
+	type ExampleStruct struct {
+		A       string
+		B       int `mapper:"bee"`
+		C       []string
+		D       map[string]int
+		E       net.IP
+		Ignored string `mapper:"-"`
+	}
+
 	// Create new structmapper instance with default configuration
 	sm, err := structmapper.NewMapper()
 	if err != nil {
