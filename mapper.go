@@ -26,9 +26,9 @@ func NewMapper(options ...Option) (*Mapper, error) {
 
 	// Apply default options first
 	for _, opt := range defaultOptions {
-		if err := opt(sm); err != nil {
+		if optErr := opt(sm); optErr != nil {
 			// Panic if default option could not be applied
-			panic(err)
+			panic(optErr)
 		}
 	}
 
