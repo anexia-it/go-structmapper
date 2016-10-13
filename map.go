@@ -102,8 +102,17 @@ func (sm *Mapper) mapStruct(v reflect.Value) (m map[string]interface{}, err erro
 		fieldV := v.Field(i)
 
 		if fieldD.Anonymous {
-			// Skip anonymous fields...
-			continue
+			// Call mapStruct on anonymous field as well and merge the result onto our map
+			anonMap, anonErr := sm.mapStruct(fieldV)
+			if anonErr != nil {
+				err = multierror.Append(err, anonErr)
+				continue
+			}
+
+			// Merge onto our map
+			for key, value := range anonMap {
+				m[key] = value
+			}
 		}
 
 		fieldName := fieldD.Name

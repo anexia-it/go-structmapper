@@ -178,7 +178,13 @@ func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type)
 		fieldV := out.Field(i)
 
 		if fieldD.Anonymous {
-			// Skip anonymous fields...
+			// Call unmapStruct on anonymous field
+			if anonErr := sm.unmapStruct(m,
+				fieldV,
+				fieldD.Type); anonErr != nil {
+				err = multierror.Append(err, anonErr)
+				continue
+			}
 			continue
 		}
 

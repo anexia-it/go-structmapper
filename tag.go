@@ -80,7 +80,8 @@ func parseTag(tag string) (name string, omitEmpty bool, err error) {
 
 	// Check if the rest of the tag does not contain any symbols
 	for _, letter := range name {
-		if !unicode.IsLetter(letter) && !unicode.IsDigit(letter) {
+
+		if letter != '_' && !unicode.IsLetter(letter) && !unicode.IsDigit(letter) {
 			err = newErrorInvalidTag(tag)
 			return
 		}

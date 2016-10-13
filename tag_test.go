@@ -69,6 +69,12 @@ func TestParseTag(t *testing.T) {
 	require.EqualValues(t, true, ok, "Not an InvalidTag error")
 
 	require.EqualValues(t, "test ,omitempty", invalidTagErr.Tag())
+
+	// Check if underscores are allowed
+	name, omitEmpty, err = parseTag("test_tag")
+	require.NoError(t, err)
+	require.EqualValues(t, "test_tag", name)
+	require.EqualValues(t, false, omitEmpty)
 }
 
 func TestIsInvalidTag(t *testing.T) {

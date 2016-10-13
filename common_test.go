@@ -43,6 +43,15 @@ type mapperTestStructBool struct {
 	A bool
 }
 
+type mapperTestStructAnonymousInner struct {
+	A string `mapper:"a_inner"`
+}
+
+type mapperTestStructAnonymousOuter struct {
+	mapperTestStructAnonymousInner
+	A string `mapper:"a_outer"`
+}
+
 func TestMapper_Roundtrip_Map(t *testing.T) {
 	// Initialize Mapper without options
 	sm, err := structmapper.NewMapper()
@@ -238,5 +247,29 @@ func TestMapper_Roundtrip_Bool(t *testing.T) {
 	require.NoError(t, sm.ToStruct(m, target))
 
 	// Check if source and target are equal
+	require.EqualValues(t, source, target)
+}
+
+func TestMapper_Roundtrip_Anonymous(t *testing.T) {
+	// Initialize Mapper without options
+	sm, err := structmapper.NewMapper()
+	require.NoError(t, err)
+	require.NotNil(t, sm)
+
+	source := &mapperTestStructAnonymousOuter{
+		mapperTestStructAnonymousInner: mapperTestStructAnonymousInner{
+			A: "inner",
+		},
+		A: "outer",
+	}
+
+	target := &mapperTestStructAnonymousOuter{}
+
+	m, err := sm.ToMap(source)
+	require.NoError(t, err)
+	require.NotNil(t, m)
+
+	require.NoError(t, sm.ToStruct(m, target))
+
 	require.EqualValues(t, source, target)
 }

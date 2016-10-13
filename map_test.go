@@ -204,3 +204,26 @@ func TestMapper_ToMap_Map(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, expected, m)
 }
+
+func TestMapper_ToMap_Anonymous(t *testing.T) {
+	// Initialize Mapper without options
+	sm, err := structmapper.NewMapper()
+	require.NoError(t, err)
+	require.NotNil(t, sm)
+
+	source := &mapperTestStructAnonymousOuter{
+		mapperTestStructAnonymousInner: mapperTestStructAnonymousInner{
+			A: "inner",
+		},
+		A: "outer",
+	}
+
+	expected := map[string]interface{}{
+		"a_inner": "inner",
+		"a_outer": "outer",
+	}
+
+	m, err := sm.ToMap(source)
+	require.NoError(t, err)
+	require.EqualValues(t, expected, m)
+}
