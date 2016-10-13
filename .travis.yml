@@ -16,8 +16,6 @@ install:
   - cd $HOME/gopath/src/gopkg.in/anexia-it/go-structmapper.v1
 
 script:
-  - go get -t -v ./...
-  - diff -u <(echo -n) <(gofmt -d .)
   - go tool vet .
   - go test -v -coverprofile=coverage.txt -covermode=atomic
 
