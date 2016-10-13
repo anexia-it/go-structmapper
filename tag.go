@@ -9,7 +9,7 @@ import (
 // DefaultTagName defines the default tag name used by Mapper
 const DefaultTagName = "mapper"
 
-// An option that configures Mapper
+// Option defines the type used by Mapper Option functions
 type Option func(*Mapper) error
 
 // OptionTagName sets the tag name the mapper uses
