@@ -2,6 +2,7 @@ package structmapper
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"unicode"
 )
@@ -61,6 +62,16 @@ func IsInvalidTag(err error) (*InvalidTag, bool) {
 	return it, ok
 }
 
+// parseTagFromStructField is a helper that calls parseTag given a reflect.StructField and a tag name
+func parseTagFromStructField(f reflect.StructField, tagName string) (name string, omitEmpty bool, err error) {
+	tag := f.Tag.Get(tagName)
+	name, omitEmpty, err = parseTag(tag)
+	if name == "" {
+		name = f.Name
+	}
+	return
+}
+
 // parseTag parses a tag string and returns the corresponding name, omitEmpty flag and a possible
 // error
 func parseTag(tag string) (name string, omitEmpty bool, err error) {
@@ -80,7 +91,6 @@ func parseTag(tag string) (name string, omitEmpty bool, err error) {
 
 	// Check if the rest of the tag does not contain any symbols
 	for _, letter := range name {
-
 		if letter != '_' && !unicode.IsLetter(letter) && !unicode.IsDigit(letter) {
 			err = newErrorInvalidTag(tag)
 			return

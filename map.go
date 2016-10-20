@@ -87,6 +87,20 @@ func (sm *Mapper) mapValue(i interface{}, v reflect.Value) (value interface{}, e
 	return
 }
 
+func (sm *Mapper) mapAnonymousField(m map[string]interface{}, v reflect.Value) error {
+	// Call mapStruct on anoynmous field
+	mappedFields, err := sm.mapStruct(v)
+	if err != nil {
+		return err
+	}
+
+	// Merge onto map of struct containing anonymous field
+	for key, value := range mappedFields {
+		m[key] = value
+	}
+	return nil
+}
+
 func (sm *Mapper) mapStruct(v reflect.Value) (m map[string]interface{}, err error) {
 	if v.Kind() == reflect.Ptr && v.IsNil() {
 		return
@@ -102,16 +116,9 @@ func (sm *Mapper) mapStruct(v reflect.Value) (m map[string]interface{}, err erro
 		fieldV := v.Field(i)
 
 		if fieldD.Anonymous {
-			// Call mapStruct on anonymous field as well and merge the result onto our map
-			anonMap, anonErr := sm.mapStruct(fieldV)
-			if anonErr != nil {
+			if anonErr := sm.mapAnonymousField(m, fieldV); anonErr != nil {
 				err = multierror.Append(err, anonErr)
 				continue
-			}
-
-			// Merge onto our map
-			for key, value := range anonMap {
-				m[key] = value
 			}
 		}
 
@@ -122,29 +129,18 @@ func (sm *Mapper) mapStruct(v reflect.Value) (m map[string]interface{}, err erro
 			continue
 		}
 
-		tagValue := fieldD.Tag.Get(sm.tagName)
-		omitEmpty := false
-
-		// Handle the tag, if it was present
-		if tagValue != "" {
-			var tagErr error
-			fieldName, omitEmpty, tagErr = parseTag(tagValue)
-			if tagErr != nil {
-				// Parsing the tag failed, ignore the field and carry on
-				err = multierror.Append(err, tagErr)
-				continue
-			}
-
-			if fieldName == "-" {
-				// Tag defines that the field shall be ignored, so carry on
-				continue
-			}
+		fieldName, omitEmpty, tagErr := parseTagFromStructField(fieldD, sm.tagName)
+		if tagErr != nil {
+			// Parsing the tag failed, ignore the field and carry on
+			err = multierror.Append(err, tagErr)
+			continue
 		}
 
 		fieldI := fieldV.Interface()
 
-		if omitEmpty && IsNilOrEmpty(fieldI, fieldV) {
-			// If omitEmpty is set and the field is nil or empty carry on
+		if fieldName == "-" || omitEmpty && IsNilOrEmpty(fieldI, fieldV) {
+			// Tag defines that field shall be ignored or omitEmpty is set
+			// and the field is nil or empty
 			continue
 		} else if fieldI != nil {
 			// If field is non-nil, map it...

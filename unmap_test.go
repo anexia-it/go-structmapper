@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/anexia-it/go-structmapper"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/require"
 )
@@ -237,5 +238,48 @@ func TestMapper_ToStruct_Anonymous(t *testing.T) {
 
 	require.NoError(t, sm.ToStruct(source, target))
 
+	require.EqualValues(t, expected, target)
+}
+
+func TestMapper_ToStruct_TypeMismatch(t *testing.T) {
+	// Initialize Mapper without options
+	sm, err := structmapper.NewMapper()
+	require.NoError(t, err)
+	require.NotNil(t, sm)
+
+	target := &mapperTestStructSimple{}
+
+	source := map[string]interface{}{
+		"eff": 3.1415,
+	}
+
+	err = sm.ToStruct(source, target) //
+	require.Error(t, err)
+	w, ok := err.(errwrap.Wrapper)
+	require.EqualValues(t, true, ok, "returned error is not an errwrap.Wrapper")
+	wrapped := w.WrappedErrors()
+	require.Len(t, wrapped, 1)
+	require.EqualError(t, wrapped[0], "eff: Type mismatch: string and float64 are incompatible")
+}
+
+func TestMapper_ToStruct_MapInterfaceInterface(t *testing.T) {
+	// Initialize Mapper without options
+	sm, err := structmapper.NewMapper()
+	require.NoError(t, err)
+	require.NotNil(t, sm)
+
+	target := &mapperTestStructNested{}
+	expected := &mapperTestStructNested{
+		E: &mapperTestStructSimple{
+			A: "test",
+		},
+	}
+	source := map[string]interface{}{
+		"e": map[interface{}]interface{}{
+			"eff": "test",
+		},
+	}
+
+	require.NoError(t, sm.ToStruct(source, target))
 	require.EqualValues(t, expected, target)
 }

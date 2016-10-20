@@ -116,15 +116,27 @@ func (sm *Mapper) unmapArray(in interface{}, out reflect.Value, t reflect.Type) 
 }
 
 func (sm *Mapper) unmapUnmarshal(in interface{}, out reflect.Value) (bool, error) {
-	inString, ok := in.(string)
-	if !ok {
+	inValue := reflect.ValueOf(in)
+	inType := inValue.Type()
+
+	str := ""
+	strValue := reflect.ValueOf(&str).Elem()
+	strType := strValue.Type()
+
+	if inType == strType {
+		str = in.(string)
+	} else if inType.AssignableTo(strType) {
+		strValue.Set(inValue)
+	} else if inType.ConvertibleTo(strType) {
+		strValue.Set(inValue.Convert(strType))
+	} else {
 		return false, nil
 	}
 
 	outI := out.Interface()
 
 	if unmarshaler, ok := outI.(encoding.TextUnmarshaler); ok {
-		return true, unmarshaler.UnmarshalText([]byte(inString))
+		return true, unmarshaler.UnmarshalText([]byte(str))
 	} else if out.CanAddr() {
 		return sm.unmapUnmarshal(in, out.Addr())
 	}
@@ -152,9 +164,25 @@ func (sm *Mapper) unmapValue(in interface{}, out reflect.Value, t reflect.Type) 
 
 	}
 
-	// Default case: copy the value over
-	out.Set(reflect.ValueOf(in))
-	return nil
+	inValue := reflect.ValueOf(in)
+	inType := inValue.Type()
+	outType := reflect.ValueOf(out.Interface()).Type()
+
+	if inType == outType {
+		// Default case: copy the value over
+		out.Set(reflect.ValueOf(in))
+		return nil
+	} else if inType.AssignableTo(outType) {
+		// Types are assignable
+		out.Set(inValue)
+		return nil
+	} else if inType.ConvertibleTo(outType) {
+		// Types are convertible
+		out.Set(inValue.Convert(outType))
+		return nil
+	}
+
+	return fmt.Errorf("Type mismatch: %s and %s are incompatible", outType.String(), inType.String())
 }
 
 func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type) (err error) {
@@ -162,8 +190,9 @@ func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type)
 		return ErrNotAStruct
 	}
 
-	m, ok := in.(map[string]interface{})
-	if !ok {
+	// Check if we received any map
+	inValue := reflect.ValueOf(in)
+	if inValue.Kind() != reflect.Map {
 		return ErrInvalidMap
 	}
 
@@ -179,7 +208,7 @@ func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type)
 
 		if fieldD.Anonymous {
 			// Call unmapStruct on anonymous field
-			if anonErr := sm.unmapStruct(m,
+			if anonErr := sm.unmapStruct(in,
 				fieldV,
 				fieldD.Type); anonErr != nil {
 				err = multierror.Append(err, anonErr)
@@ -195,30 +224,25 @@ func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type)
 			continue
 		}
 
-		tagValue := fieldD.Tag.Get(sm.tagName)
+		fieldName, _, tagErr := parseTagFromStructField(fieldD, sm.tagName)
+		if tagErr != nil {
+			// Parsing the tag failed, ignore the field and carry on
+			err = multierror.Append(err, tagErr)
+			continue
+		}
 
-		// Handle the tag, if it was present
-		if tagValue != "" {
-			var tagErr error
-			fieldName, _, tagErr = parseTag(tagValue)
-			if tagErr != nil {
-				// Parsing the tag failed, ignore the field and carry on
-				err = multierror.Append(err, tagErr)
-				continue
-			}
-
-			if fieldName == "-" {
-				// Tag defines that the field shall be ignored, so carry on
-				continue
-			}
+		if fieldName == "-" {
+			// Tag defines that the field shall be ignored, so carry on
+			continue
 		}
 
 		// Look up value of "fieldName" in map
-		mapValue, ok := m[fieldName]
-		if !ok {
+		mapVal := inValue.MapIndex(reflect.ValueOf(fieldName))
+		if !mapVal.IsValid() {
 			// Value not in map, ignore it
 			continue
 		}
+		mapValue := mapVal.Interface()
 
 		if fieldV.Kind() == reflect.Interface {
 			// Setting interfaces is unsupported.
