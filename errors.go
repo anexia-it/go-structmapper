@@ -7,7 +7,7 @@ var (
 	ErrTagNameEmpty = errors.New("Tag name is empty")
 
 	// ErrNotAStruct designates that the passed value is not a struct
-	ErrNotAStruct = errors.New("Now a struct")
+	ErrNotAStruct = errors.New("Not a struct")
 
 	// ErrInvalidMap designates that the passed value is not a valid map
 	ErrInvalidMap = errors.New("Invalid map")
