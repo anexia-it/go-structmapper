@@ -52,6 +52,11 @@ type mapperTestStructAnonymousOuter struct {
 	A string `mapper:"a_outer"`
 }
 
+type mapperTestStructAnonymousPtrOuter struct {
+	*mapperTestStructAnonymousInner
+	A string `mapper:"a_outer"`
+}
+
 type mapperTestStructMapStringString struct {
 	A string
 	B map[string]string

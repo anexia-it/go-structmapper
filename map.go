@@ -88,6 +88,10 @@ func (sm *Mapper) mapValue(i interface{}, v reflect.Value) (value interface{}, e
 }
 
 func (sm *Mapper) mapAnonymousField(m map[string]interface{}, v reflect.Value) error {
+	if v.Kind() == reflect.Ptr && v.IsValid() && !v.IsNil() {
+		v = v.Elem()
+	}
+
 	// Call mapStruct on anoynmous field
 	mappedFields, err := sm.mapStruct(v)
 	if err != nil {
