@@ -186,6 +186,13 @@ func (sm *Mapper) unmapValue(in interface{}, out reflect.Value, t reflect.Type) 
 }
 
 func (sm *Mapper) unmapStruct(in interface{}, out reflect.Value, t reflect.Type) (err error) {
+	if out.Kind() == reflect.Ptr {
+		// Target is a pointer to a struct: create a new instance
+		out.Set(reflect.New(out.Type().Elem()))
+		out = out.Elem()
+		t = out.Type()
+	}
+
 	if out.Kind() != reflect.Struct {
 		return ErrNotAStruct
 	}

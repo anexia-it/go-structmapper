@@ -241,6 +241,31 @@ func TestMapper_ToStruct_Anonymous(t *testing.T) {
 	require.EqualValues(t, expected, target)
 }
 
+func TestMapper_ToStruct_AnonymousPtr(t *testing.T) {
+	// Initialize Mapper without options
+	sm, err := structmapper.NewMapper()
+	require.NoError(t, err)
+	require.NotNil(t, sm)
+
+	expected := &mapperTestStructAnonymousPtrOuter{
+		mapperTestStructAnonymousInner: &mapperTestStructAnonymousInner{
+			A: "inner",
+		},
+		A: "outer",
+	}
+
+	target := &mapperTestStructAnonymousPtrOuter{}
+
+	source := map[string]interface{}{
+		"a_inner": "inner",
+		"a_outer": "outer",
+	}
+
+	require.NoError(t, sm.ToStruct(source, target))
+
+	require.EqualValues(t, expected, target)
+}
+
 func TestMapper_ToStruct_TypeMismatch(t *testing.T) {
 	// Initialize Mapper without options
 	sm, err := structmapper.NewMapper()
