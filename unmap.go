@@ -59,22 +59,24 @@ func (sm *Mapper) unmapMap(in interface{}, out reflect.Value, t reflect.Type) (e
 
 	outMap := reflect.MakeMap(t)
 
-	for _, keyElem := range inMap.MapKeys() {
+	for _, inKeyElem := range inMap.MapKeys() {
 
-		keyV := reflect.ValueOf(keyElem.Interface())
-		key := keyV.Interface()
-		outKey := reflect.New(keyV.Type()).Elem()
-		if unmapErr := sm.unmapValue(key, outKey, outKey.Type()); unmapErr != nil {
-			err = multierror.Append(err, multierror.Prefix(unmapErr, fmt.Sprintf("@%+v (key)", key)))
+		inKeyV := reflect.ValueOf(inKeyElem.Interface())
+		inKeyInterface := inKeyV.Interface()
+		outKey := reflect.New(inKeyV.Type()).Elem()
+		if unmapErr := sm.unmapValue(inKeyInterface, outKey, outKey.Type()); unmapErr != nil {
+			err = multierror.Append(err, multierror.Prefix(unmapErr, fmt.Sprintf("@%+v (key)", inKeyInterface)))
 			continue
 		}
-		valueElem := inMap.MapIndex(keyV)
-		valueV := reflect.ValueOf(valueElem.Interface())
-		value := valueV.Interface()
-		outValue := reflect.New(valueV.Type()).Elem()
+		inValueElem := inMap.MapIndex(inKeyV)
+		inValueV := reflect.ValueOf(inValueElem.Interface())
+		inValueInterface := inValueV.Interface()
 
-		if unmapErr := sm.unmapValue(value, outValue, outValue.Type()); unmapErr != nil {
-			err = multierror.Append(err, multierror.Prefix(unmapErr, fmt.Sprintf("@%+v (value)", key)))
+		outValue := reflect.New(outMap.Type().Elem()).Elem()
+
+		if unmapErr := sm.unmapValue(inValueInterface, outValue, outValue.Type()); unmapErr != nil {
+			err = multierror.Append(err, multierror.Prefix(unmapErr, fmt.Sprintf("@%+v (inValueInterface)",
+				inValueInterface)))
 			continue
 		}
 

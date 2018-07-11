@@ -7,6 +7,7 @@ import (
 	"github.com/anexia-it/go-structmapper"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -307,5 +308,28 @@ func TestMapper_ToStruct(t *testing.T) {
 
 		require.NoError(t, sm.ToStruct(source, target))
 		require.EqualValues(t, expected, target)
+	})
+
+	t.Run("MapValueTypeCompability", func(t *testing.T) {
+		sm, err := structmapper.NewMapper()
+		require.NoError(t, err)
+		require.NotNil(t, sm)
+
+		target := mapperTestStructMapInt16{}
+		source := map[string]interface{}{
+			"data": map[string]interface{}{
+				"0": float32(1),
+				"1": float32(2),
+			},
+		}
+		expected := mapperTestStructMapInt16{
+			Data: map[string]int16{
+				"0": 1,
+				"1": 2,
+			},
+		}
+
+		assert.NoError(t, sm.ToStruct(source, &target))
+		assert.EqualValues(t, expected, target)
 	})
 }
