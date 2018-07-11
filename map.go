@@ -122,8 +122,8 @@ func (sm *Mapper) mapStruct(v reflect.Value) (m map[string]interface{}, err erro
 		if fieldD.Anonymous {
 			if anonErr := sm.mapAnonymousField(m, fieldV); anonErr != nil {
 				err = multierror.Append(err, anonErr)
-				continue
 			}
+			continue
 		}
 
 		fieldName := fieldD.Name
