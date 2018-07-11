@@ -107,10 +107,6 @@ func TestMapper_ToMap(t *testing.T) {
 			require.EqualValues(t, expected, m)
 		})
 
-
-
-
-
 	})
 
 	t.Run("ArraySlice", func(t *testing.T) {
