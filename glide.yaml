@@ -1,8 +1,0 @@
-package: github.com/anexia-it/go-structmapper
-import:
-- package: github.com/hashicorp/go-multierror
-testImport:
-- package: github.com/stretchr/testify
-  version: ~1.1.4
-  subpackages:
-  - require
