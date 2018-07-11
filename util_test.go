@@ -31,6 +31,7 @@ func TestIsNilOrEmpty(t *testing.T) {
 }
 
 func TestForceStringMapKeys(t *testing.T) {
+	// TODO: split cases into sub-tests
 	// Simple map test: should be returned as-is
 	simpleMap := map[string]interface{}{
 		"0":  "0",

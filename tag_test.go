@@ -1,80 +1,96 @@
 package structmapper
 
 import (
+	"errors"
 	"testing"
 
-	"errors"
-
 	"github.com/hashicorp/go-multierror"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOptionTagName(t *testing.T) {
-	sm, err := NewMapper(OptionTagName("test"))
+	t.Run("OK", func(t *testing.T) {
+		sm, err := NewMapper(OptionTagName("test"))
 
-	require.NoError(t, err)
-	require.NotNil(t, sm)
+		require.NoError(t, err)
+		require.NotNil(t, sm)
 
-	// Check if the supplied tag name was set
-	require.EqualValues(t, "test", sm.tagName)
+		// Check if the supplied tag name was set
+		require.EqualValues(t, "test", sm.tagName)
+	})
 
-	// Try setting an empty tag name
-	sm, err = NewMapper(OptionTagName(""))
-	require.Error(t, err)
-	require.Nil(t, sm)
+	t.Run("EmptyTag", func(t *testing.T) {
+		// Try setting an empty tag name
+		sm, err := NewMapper(OptionTagName(""))
+		require.Error(t, err)
+		require.Nil(t, sm)
 
-	multiErr, ok := err.(*multierror.Error)
-	require.EqualValues(t, ok, true, "Returned error is not a multierror.Error")
-	require.Len(t, multiErr.WrappedErrors(), 1)
-	require.EqualError(t, multiErr.WrappedErrors()[0], ErrTagNameEmpty.Error())
+		require.IsType(t, &multierror.Error{}, err)
+		multiErr := err.(*multierror.Error)
+		assert.Len(t, multiErr.WrappedErrors(), 1)
+		assert.EqualError(t, multiErr.WrappedErrors()[0], ErrTagNameEmpty.Error())
+	})
+
 }
 
 func TestParseTag(t *testing.T) {
-	// Check if the special-case ignore-me tag ("-") gives the correct result
-	name, omitEmpty, err := parseTag("-")
-	require.EqualValues(t, "-", name)
-	require.EqualValues(t, false, omitEmpty)
-	require.NoError(t, err)
+	t.Run("Dash", func(t *testing.T) {
+		// Check if the special-case ignore-me tag ("-") gives the correct result
+		name, omitEmpty, err := parseTag("-")
+		assert.EqualValues(t, "-", name)
+		assert.EqualValues(t, false, omitEmpty)
+		assert.NoError(t, err)
+	})
 
-	// Check if ",omitEmpty" alone works
-	name, omitEmpty, err = parseTag(",omitempty")
-	require.EqualValues(t, "", name)
-	require.EqualValues(t, true, omitEmpty)
-	require.NoError(t, err)
+	t.Run("OmitEmptyNoTagName", func(t *testing.T) {
+		// Check if ",omitEmpty" alone works
+		name, omitEmpty, err := parseTag(",omitempty")
+		assert.EqualValues(t, "", name)
+		assert.EqualValues(t, true, omitEmpty)
+		assert.NoError(t, err)
+	})
 
-	// Check if "name,omitEmpty" returns the correct tag name
-	name, omitEmpty, err = parseTag("test,omitempty")
-	require.EqualValues(t, "test", name)
-	require.EqualValues(t, true, omitEmpty)
-	require.NoError(t, err)
+	t.Run("OmitEmpty", func(t *testing.T) {
+		// Check if "name,omitEmpty" returns the correct tag name
+		name, omitEmpty, err := parseTag("test,omitempty")
+		assert.EqualValues(t, "test", name)
+		assert.EqualValues(t, true, omitEmpty)
+		assert.NoError(t, err)
+	})
 
-	// Check if a punctation inside the tag name gives an error
-	name, omitEmpty, err = parseTag("test.,omitempty")
-	require.EqualValues(t, "test.", name)
-	require.EqualValues(t, true, omitEmpty)
-	require.Error(t, err)
+	t.Run("Puncation", func(t *testing.T) {
+		// Check if a punctation inside the tag name gives an error
+		name, omitEmpty, err := parseTag("test.,omitempty")
+		assert.EqualValues(t, "test.", name)
+		assert.EqualValues(t, true, omitEmpty)
+		assert.Error(t, err)
 
-	invalidTagErr, ok := err.(*InvalidTag)
-	require.EqualValues(t, true, ok, "Not an InvalidTag error")
+		require.IsType(t, &InvalidTag{}, err)
+		invalidTagErr := err.(*InvalidTag)
+		assert.EqualValues(t, "test.,omitempty", invalidTagErr.Tag())
+	})
 
-	require.EqualValues(t, "test.,omitempty", invalidTagErr.Tag())
+	t.Run("Whitespace", func(t *testing.T) {
+		// Check if whitespace inside the tag name gives an error
+		name, omitEmpty, err := parseTag("test ,omitempty")
+		assert.EqualValues(t, "test ", name)
+		assert.EqualValues(t, true, omitEmpty)
+		assert.Error(t, err)
 
-	// Check if whitespace inside the tag name gives an error
-	name, omitEmpty, err = parseTag("test ,omitempty")
-	require.EqualValues(t, "test ", name)
-	require.EqualValues(t, true, omitEmpty)
-	require.Error(t, err)
+		require.IsType(t, &InvalidTag{}, err)
+		invalidTagErr := err.(*InvalidTag)
+		assert.EqualValues(t, "test ,omitempty", invalidTagErr.Tag())
+	})
 
-	invalidTagErr, ok = err.(*InvalidTag)
-	require.EqualValues(t, true, ok, "Not an InvalidTag error")
+	t.Run("Underscores", func(t *testing.T) {
+		// Check if underscores are allowed
+		name, omitEmpty, err := parseTag("test_tag")
+		assert.NoError(t, err)
+		assert.EqualValues(t, "test_tag", name)
+		assert.EqualValues(t, false, omitEmpty)
+	})
 
-	require.EqualValues(t, "test ,omitempty", invalidTagErr.Tag())
-
-	// Check if underscores are allowed
-	name, omitEmpty, err = parseTag("test_tag")
-	require.NoError(t, err)
-	require.EqualValues(t, "test_tag", name)
-	require.EqualValues(t, false, omitEmpty)
 }
 
 func TestIsInvalidTag(t *testing.T) {
@@ -82,16 +98,21 @@ func TestIsInvalidTag(t *testing.T) {
 	err := newErrorInvalidTag("test")
 	require.NotNil(t, err)
 
-	it, ok := IsInvalidTag(err)
-	require.EqualValues(t, true, ok, "IsInvalidTag should return true")
-	require.NotNil(t, it)
-	require.EqualValues(t, err, it)
+	t.Run("Yes", func(t *testing.T) {
+		it, ok := IsInvalidTag(err)
+		require.EqualValues(t, true, ok, "IsInvalidTag should return true")
+		require.NotNil(t, it)
+		require.EqualValues(t, err, it)
+	})
 
-	// Test if IsInvalidTag works correctly for non-invalid tag error
-	err = errors.New("test")
-	it, ok = IsInvalidTag(err)
-	require.EqualValues(t, false, ok, "IsInvalidTag should return false")
-	require.Nil(t, it)
+	t.Run("No", func(t *testing.T) {
+		// Test if IsInvalidTag works correctly for non-invalid tag error
+		err = errors.New("test")
+		it, ok := IsInvalidTag(err)
+		require.EqualValues(t, false, ok, "IsInvalidTag should return false")
+		require.Nil(t, it)
+	})
+
 }
 
 func TestInvalidTag_Tag(t *testing.T) {
