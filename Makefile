@@ -26,22 +26,10 @@ benchmark:
 
 .PHONY: test
 test: tools
-	tools/ginkgo run -p 			\
-		-timeout 0 					\
-		-race 						\
+	go test 				\
+		-race 				\
 		-coverprofile coverage.out 	\
 		./...
-	go tool cover -html=coverage.out -o coverage.html
-
-.PHONY: func-test
-func-test: tools
-	tools/ginkgo run -p  			\
-		-timeout 180m				\
-		-race 						\
-		-tags integration 			\
-		-coverpkg ./...				\
-		-coverprofile coverage.out	\
-	    ./pkg/...
 	go tool cover -html=coverage.out -o coverage.html
 
 .PHONY: go-lint
@@ -84,7 +72,6 @@ fmtcheck:
 tools:
 	cd tools && go build -o . github.com/client9/misspell/cmd/misspell
 	cd tools && go build -o . github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go build -o . github.com/onsi/ginkgo/v2/ginkgo
 
 .PHONY: install-precommit-hook
 install-precommit-hook: .git/hooks/pre-commit
