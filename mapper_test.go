@@ -29,7 +29,7 @@ func TestNewMapper(t *testing.T) {
 
 		// Ensure NewMapper panics with a bad default option
 		require.Panics(t, func() {
-			NewMapper()
+			_, _ = NewMapper()
 		})
 	})
 }
