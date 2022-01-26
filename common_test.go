@@ -5,7 +5,7 @@ import (
 
 	"net"
 
-	structmapper "github.com/anexia-it/go-structmapper"
+	"github.com/anexia-it/go-structmapper"
 	"github.com/stretchr/testify/require"
 )
 
