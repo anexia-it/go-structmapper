@@ -10,10 +10,7 @@
 go-structmapper is a Go library which allows mapping arbitrary structs to maps
 and vice-versa.
 
-## Install
+## Installing
 
-With a [correctly configured](https://golang.org/doc/install#testing) Go toolchain:
-
-```sh
-go get -u gopkg.in/anexia-it/go-structmapper.v1
-```
+To use `go-structmapper` just add
+`github.com/anexia-it/go-structmapper <version>` to your `go.mod` file.
