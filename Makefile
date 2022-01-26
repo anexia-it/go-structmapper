@@ -1,6 +1,6 @@
 GITTAG ?= $(shell git describe --tags --always)
 GITCOMMIT ?= $(shell git log -1 --pretty=format:"%H")
-GOLDFLAGS ?= -s -w -extldflags '-zrelro -znow' -X go.anx.io/go-anxcloud/pkg/client.version=$(GITTAG)
+GOLDFLAGS ?= -s -w -extldflags '-zrelro -znow'
 GOFLAGS ?= -trimpath
 CGO_ENABLED ?= 0
 
