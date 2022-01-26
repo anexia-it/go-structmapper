@@ -1,5 +1,4 @@
-go-structmapper
-===
+# go-structmapper
 
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/anexia-it/go-structmapper/blob/master/LICENSE)
 [![GoDoc](https://godoc.org/gopkg.in/anexia-it/go-structmapper.v1?status.svg)](https://godoc.org/gopkg.in/anexia-it/go-structmapper.v1)
@@ -9,8 +8,7 @@ go-structmapper
 go-structmapper is a Go library which allows mapping arbitrary structs to maps
 and vice-versa.
 
-Install
--------
+## Install
 
 With a [correctly configured](https://golang.org/doc/install#testing) Go toolchain:
 
