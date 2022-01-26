@@ -1,0 +1,26 @@
+#!/bin/sh
+
+PRECOMMIT_TARGETS="depscheck fmtcheck lint"
+
+cur_hash=$(sha256sum $0 | awk '{ print $1" scripts/pre-commit" }')
+echo "$cur_hash" | sha256sum -c - --status
+if [ $? -ne 0 ]; then
+    echo "[pre-commit] Your pre-commit hook is not up-to-date, run \`make install-precommit-hook\`" > /dev/stderr
+    exit 1
+fi
+
+# save everything except the index into a stash object
+stash_entry=$(git stash create -a -u -q --keep-index -m "$stash_message")
+echo "[pre-commit] Saved your unstaged changes into $stash_entry, you can restore them with \`git stash apply\`"
+
+# reset everything not indexed for commit
+git checkout -q .
+
+# run the actual checks
+make $PRECOMMIT_TARGETS
+result=$?
+
+# restore unstaged changes into working tree
+git stash apply -q $stash_entry
+
+exit $result

@@ -5,7 +5,7 @@ import (
 
 	"net"
 
-	"github.com/anexia-it/go-structmapper"
+	structmapper "github.com/anexia-it/go-structmapper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +15,7 @@ type mapperTestStructSimple struct {
 
 type mapperTestStructNested struct {
 	// Even though a tag is set, this should be ignored
-	privateTest string                  `mapper:"private"`
+	privateTest string                  `mapper:"private"` //nolint:structcheck,unused
 	A           string                  `mapper:"a"`
 	B           int                     `mapper:"b"`
 	C           float64                 `mapper:"c"`
